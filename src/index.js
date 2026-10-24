@@ -25,6 +25,10 @@ if (process.platform === 'win32') {
   process.title = 'WhatsApp розсилка'
 }
 
+// libsignal (used by Baileys) dumps internal session objects via console.info/warn/error.
+// Our own output goes through console.log only, so silence the rest to keep the terminal readable.
+console.info = console.warn = console.error = console.debug = () => {}
+
 const DEFAULT_CONFIG = {
   recipients: ['380XXXXXXXXX'],
   message: 'Щогодинне нагадування ({time})',
@@ -85,6 +89,14 @@ const config = (() => {
 let sock = null
 let connected = false
 let pendingSend = false
+let sendTimer = null
+
+// The next send is counted from the previous one (not from program start),
+// so sends stay evenly spaced even if login or a reconnect delayed one of them.
+function scheduleNextSend() {
+  clearTimeout(sendTimer)
+  sendTimer = setTimeout(sendToAll, config.intervalMinutes * 60_000)
+}
 
 async function sendToAll() {
   if (!connected) {
@@ -93,6 +105,7 @@ async function sendToAll() {
     return
   }
   pendingSend = false
+  scheduleNextSend()
   const text = config.message.replaceAll('{time}', formatDate())
   for (const number of config.recipients) {
     try {
@@ -163,6 +176,6 @@ if (!config) {
     'Не закривайте це вікно: якщо його закрити, надсилання припиниться.',
   )
   pendingSend = config.sendOnStart
-  setInterval(sendToAll, config.intervalMinutes * 60_000)
+  if (!pendingSend) scheduleNextSend()
   connect().catch(onConnectError)
 }
