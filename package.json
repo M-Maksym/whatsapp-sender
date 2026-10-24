@@ -1,0 +1,24 @@
+{
+  "name": "whatsapp-sender",
+  "version": "1.0.0",
+  "description": "Sends a WhatsApp message to configured numbers on a fixed interval",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "bundle": "esbuild src/index.js --bundle --platform=node --target=node22 --format=cjs --outfile=dist/bundle.cjs --external:sharp --external:jimp --external:link-preview-js --external:audio-decode --log-level=warning",
+    "build:win": "npm run bundle && pkg dist/bundle.cjs --no-bytecode --public --public-packages \"*\" --targets node22-win-x64 --output dist/whatsapp-sender.exe"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "baileys": "^7.0.0-rc14",
+    "pino": "^10.4.0",
+    "qrcode-terminal": "^0.12.0"
+  },
+  "devDependencies": {
+    "@yao-pkg/pkg": "^6.24.0",
+    "esbuild": "^0.28.2"
+  },
+  "type": "module",
+  "private": true
+}
